@@ -6,7 +6,7 @@
         body{
             margin:0;
             padding:0;
-            background: #FFFFFF;
+            background: ;
         }
         #messages{
             position: fixed;
@@ -14,7 +14,7 @@
             top:0;
             width:100%;
             height:calc( 100% - 50px );
-            background:#000;
+            background:#ffffff;
             overflow-y:auto;
             padding:10px;
             box-sizing: border-box;
@@ -44,10 +44,6 @@
             width: 100px;
             height:100%;
         }
-
-         #dltMsg{
-             border-radius: 10px;
-             
         .outer{
             width:100%;
             margin-top:10px;
@@ -63,7 +59,7 @@
             color:#fff;
         }
         .notMe{
-            background: hsl(202, 100%, 50%);
+            background:hsl(202, 100%, 50%);
             color:#000;
         }
     </style>
@@ -121,7 +117,7 @@
         // TO RECEIVE MSG
         onChildAdded(ref(db,"messages"), (data)=>{
             if(data.val().sender == sender){
-                messages.innerHTML += "<div style=justify-content:end class=outer id="+data.key+"><div id=inner class=me>You : "+data.val().msg+"<button id=dltMsg onclick=module.dltMsg("+data.key+")>DELETE</button></div></div>";
+                messages.innerHTML += "<div style=justify-content:end class=outer id="+data.key+"><div id=inner class=me>you : "+data.val().msg+"<button id=dltMsg onclick=module.dltMsg("+data.key+")>DELETE</button></div></div>";
             } else {
                 messages.innerHTML += "<div class=outer id="+data.key+"><div id=inner class=notMe>"+data.val().sender+" : "+data.val().msg+"</div></div>";
             }
