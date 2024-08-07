@@ -2,15 +2,11 @@
 <html>
 
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
     <style>
         body{
             margin:0;
             padding:0;
-            background: ;
+            background:#000;
         }
         #messages{
             position: fixed;
@@ -18,7 +14,7 @@
             top:0;
             width:100%;
             height:calc( 100% - 50px );
-            background:#ffffff;
+            background:#000;
             overflow-y:auto;
             padding:10px;
             box-sizing: border-box;
@@ -39,7 +35,6 @@
             height:100%;
             padding-left:10px;
             box-sizing: border-box;
-            
         }
         #msgBtn{
             position: absolute;
@@ -59,11 +54,11 @@
             border-radius:10px;
         }
         .me{
-            background:hsl(202, 100%, 50%);
+            background:#8800FF;
             color:#fff;
         }
         .notMe{
-            background:hsl(202, 100%, 50%);
+            background:#FFF;
             color:#000;
         }
     </style>
@@ -82,16 +77,16 @@
     </script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, remove, onChildAdded, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, remove, onChildAdded, onChildRemoved } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
         const firebaseConfig = {
-             apiKey: "AIzaSyDxvHNNYAlWPGyEBqFt13o50Kqdz5ApgZI",
-            authDomain: "taes-f7423.firebaseapp.com",
-             projectId: "taes-f7423",
-            storageBucket: "taes-f7423.appspot.com",
-             messagingSenderId: "119249018524",
-             appId: "1:119249018524:web:a8a4a6752f77dee124d759"
-        };
+    apiKey: "AIzaSyBQ2ZtC5PNXBkTMQS_CH49zS59IDGZ-YME",
+    authDomain: "coder-ba0af.firebaseapp.com",
+    projectId: "coder-ba0af",
+    storageBucket: "coder-ba0af.appspot.com",
+    messagingSenderId: "490113185913",
+    appId: "1:490113185913:web:9b4b61d43691469010bca8"
+  };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
