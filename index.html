@@ -1,75 +1,163 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Chat App</title>
     <style>
-        body{
-            margin:0;
-            padding:0;
-            background:#000;
+        body {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
         }
-        #messages{
-            position: fixed;
-            left:0;
-            top:0;
-            width:100%;
-            height:calc( 100% - 50px );
-            background:#000;
-            overflow-y:auto;
-            padding:10px;
-            box-sizing: border-box;
-        }
-        #sendMsg{
-            position: fixed;
-            left:0;
-            bottom:0;
+
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            height:50px;
-            background:#AAA;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
         }
-        #msgTxt{
-            position: absolute;
-            left:0;
-            top:0;
-            width:calc(100% - 100px);
-            height:100%;
-            padding-left:10px;
-            box-sizing: border-box;
+
+        #background canvas {
+            width: 100%;
+            height: 100%;
+            background: #000;
         }
-        #msgBtn{
-            position: absolute;
-            right:0;
-            top:0;
-            width: 100px;
-            height:100%;
+
+        #messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 2px solid #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
-        .outer{
-            width:100%;
-            margin-top:10px;
-            display:flex;
+
+        #sendMsg {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 2px solid #00ff00;
+            padding: 10px;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
         }
-        #inner{
-            padding:10px;
-            box-sizing: border-box;
-            border-radius:10px;
+
+        #msgTxt {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #00ff00;
+            border-radius: 5px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #00ff00;
+            font-size: 16px;
+            margin-right: 10px;
+            box-shadow: inset 0 0 5px rgba(0, 255, 0, 0.5);
         }
-        .me{
-            background:#8800FF;
-            color:#fff;
+
+        #msgBtn {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+            transition: background 0.3s, transform 0.2s;
         }
-        .notMe{
-            background:#FFF;
-            color:#000;
+
+        #msgBtn:hover {
+            background: linear-gradient(135deg, #00cc00, #009900);
+            transform: scale(1.05);
+        }
+
+        #msgBtn:active {
+            transform: scale(0.95);
+        }
+
+        #fileInput {
+            margin-right: 10px;
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 5px;
+            padding: 5px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 10px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .message.me {
+            justify-content: flex-end;
+        }
+
+        .message.me .bubble {
+            background: rgba(0, 255, 0, 0.8);
+            color: #000;
+            border-radius: 10px;
+            padding: 10px;
+            max-width: 60%;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .message.notMe .bubble {
+            background: rgba(0, 0, 0, 0.7);
+            color: #00ff00;
+            border-radius: 10px;
+            padding: 10px;
+            max-width: 60%;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
+        .bubble button {
+            background: none;
+            border: none;
+            color: #ff0000;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+
+        .bubble button:hover {
+            color: #ff6666;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 
 <body>
+    <div id="background">
+        <canvas id="binaryCanvas"></canvas>
+    </div>
     <div id="messages"></div>
-
     <div id="sendMsg">
-        <input type="text" id="msgTxt" placeholder="ENTER YOUR MSG...">
-        <input type="submit" id="msgBtn" value="send" onclick="module.sendMsg()">
+        <input type="file" id="fileInput" onchange="module.uploadFile()">
+        <input type="text" id="msgTxt" placeholder="Enter your message...">
+        <button id="msgBtn" onclick="module.sendMsg()">Send</button>
     </div>
 
     <script>
@@ -77,61 +165,123 @@
     </script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, remove, onChildAdded, onChildRemoved } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        import { getDatabase, ref, set, remove, onChildAdded, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
-    apiKey: "AIzaSyBQ2ZtC5PNXBkTMQS_CH49zS59IDGZ-YME",
-    authDomain: "coder-ba0af.firebaseapp.com",
-    projectId: "coder-ba0af",
-    storageBucket: "coder-ba0af.appspot.com",
-    messagingSenderId: "490113185913",
-    appId: "1:490113185913:web:9b4b61d43691469010bca8"
-  };
+            apiKey: "AIzaSyCX_8loLME7ImASf1sVmrOgKs0-x04nFRU",
+            authDomain: "bsitchat-3b19b.firebaseapp.com",
+    projectId: "bsitchat-3b19b",
+    storageBucket: "bsitchat-3b19b.appspot.com",
+    messagingSenderId: "415964889076",
+    appId: "1:415964889076:web:4f250d279a4b8e25a903a1",
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
         // variables
         var msgTxt = document.getElementById('msgTxt');
+        var fileInput = document.getElementById('fileInput');
         var sender;
-        if(sessionStorage.getItem('sender')){
+
+        if (sessionStorage.getItem('sender')) {
             sender = sessionStorage.getItem('sender');
         } else {
-            sender = prompt('PLEASE ENTER YOUR NAME');
-            sessionStorage.setItem('sender',sender);
+            sender = prompt('Please enter your name');
+            sessionStorage.setItem('sender', sender);
         }
 
         // TO SEND MESSAGES
-        module.sendMsg = function sendMsg(){
+        module.sendMsg = function sendMsg() {
             var msg = msgTxt.value;
             var timestamp = new Date().getTime();
-            set(ref(db,"messages/"+timestamp),{
-                msg : msg,
-                sender : sender
-            })
+            set(ref(db, "messages/" + timestamp), {
+                msg: msg,
+                sender: sender
+            });
 
-            msgTxt.value="";
+            msgTxt.value = "";
         }
 
         // TO RECEIVE MSG
-        onChildAdded(ref(db,"messages"), (data)=>{
-            if(data.val().sender == sender){
-                messages.innerHTML += "<div style=justify-content:end class=outer id="+data.key+"><div id=inner class=me>you : "+data.val().msg+"<button id=dltMsg onclick=module.dltMsg("+data.key+")>DELETE</button></div></div>";
+        onChildAdded(ref(db, "messages"), (data) => {
+            const messageData = data.val();
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            if (messageData.sender === sender) {
+                messageElement.classList.add('me');
+                messageElement.innerHTML = `<div class="bubble">You: ${messageData.msg} <button onclick="module.dltMsg('${data.key}')">Delete</button></div>`;
             } else {
-                messages.innerHTML += "<div class=outer id="+data.key+"><div id=inner class=notMe>"+data.val().sender+" : "+data.val().msg+"</div></div>";
+                messageElement.classList.add('notMe');
+                messageElement.innerHTML = `<div class="bubble">${messageData.sender}: ${messageData.msg}</div>`;
             }
+            document.getElementById('messages').appendChild(messageElement);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight; // Auto-scroll to bottom
         })
 
         // TO DELETE MSG
-        module.dltMsg = function dltMsg(key){
-            remove(ref(db,"messages/"+key));
+        module.dltMsg = function dltMsg(key) {
+            remove(ref(db, "messages/" + key));
         }
 
         // WHEN MSG IS DELETED
-        onChildRemoved(ref(db,"messages"),(data)=>{
-            var msgBox = document.getElementById(data.key);
-            messages.removeChild(msgBox);
+        onChildRemoved(ref(db, "messages"), (data) => {
+            const msgBox = document.querySelector(`.message[id='${data.key}']`);
+            if (msgBox) {
+                msgBox.remove();
+            }
         })
+
+        // FILE UPLOAD FUNCTION
+        module.uploadFile = function uploadFile() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const timestamp = new Date().getTime();
+            const fileRef = storageRef(storage, 'files/' + timestamp + '-' + file.name);
+
+            uploadBytes(fileRef, file).then(() => {
+                getDownloadURL(fileRef).then(url => {
+                    const timestamp = new Date().getTime();
+                    set(ref(db, "messages/" + timestamp), {
+                        msg: `<a href="${url}" target="_blank">File: ${file.name}</a>`,
+                        sender: sender
+                    });
+                });
+            });
+        }
+
+        // BINARY CODE BACKGROUND
+        function createBinaryBackground() {
+            const canvas = document.getElementById('binaryCanvas');
+            const ctx = canvas.getContext('2d');
+            const columns = canvas.width / 10;
+            const drops = Array.from({ length: columns }).fill(0);
+
+            function draw() {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#00ff00';
+                ctx.font = '10pt monospace';
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = Math.random() > 0.5 ? '1' : '0';
+                    ctx.fillText(text, i * 10, drops[i] * 10);
+                    drops[i]++;
+                    if (drops[i] * 10 > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                }
+            }
+
+            setInterval(draw, 50);
+        }
+
+        // Initialize binary background
+        createBinaryBackground();
     </script>
 </body>
 
