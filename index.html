@@ -1,80 +1,128 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EJAY PRIVATE CHAT</title>
     <style>
-        body{
-            margin:0;
-            padding:0;
-            background: ;
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
         }
-        #messages{
-            position: fixed;
-            left:0;
-            top:0;
-            width:100%;
-            height:calc( 100% - 50px );
-            background:#ffffff;
-            overflow-y:auto;
-            padding:10px;
-            box-sizing: border-box;
-        }
-        #sendMsg{
-            position: fixed;
-            left:0;
-            bottom:0;
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
             width: 100%;
-            height:50px;
-            background:#AAA;
+            height: 100%;
+            max-width: 100%;
+            margin: 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 0;
+            overflow: hidden;
         }
-        #msgTxt{
-            position: absolute;
-            left:0;
-            top:0;
-            width:calc(100% - 100px);
-            height:100%;
-            padding-left:10px;
+
+        .chat-header {
+            background: #007bff;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        #messages {
+            flex: 1;
+            background: #fff;
+            overflow-y: auto;
+            padding: 20px;
             box-sizing: border-box;
-            
+            display: flex;
+            flex-direction: column;
         }
-        #msgBtn{
-            position: absolute;
-            right:0;
-            top:0;
-            width: 100px;
-            height:100%;
+
+        #sendMsg {
+            display: flex;
+            background: #007bff;
+            padding: 10px;
+            flex-shrink: 0;
         }
-        .outer{
-            width:100%;
-            margin-top:10px;
-            display:flex;
+
+        #msgTxt {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 1rem;
         }
-        #inner{
-            padding:10px;
+
+        #msgBtn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            background: #fff;
+            color: #007bff;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            max-width: 75%;
+        }
+
+        .message.sent {
+            background: #007bff;
+            color: #fff;
+            align-self: flex-end;
+        }
+
+        .message.received {
+            background: #e0e0e0;
+            align-self: flex-start;
+        }
+
+        .outer {
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            margin-top: 10px;
+        }
+
+        .outer.received {
+            justify-content: flex-start;
+        }
+
+        .outer.sent {
+            justify-content: flex-end;
+        }
+
+        .outer .inner {
+            padding: 10px;
             box-sizing: border-box;
-            border-radius:10px;
-        }
-        .me{
-            background:hsl(202, 100%, 50%);
-            color:#fff;
-        }
-        .notMe{
-            background:hsl(202, 100%, 50%);
-            color:#000;
+            border-radius: 10px;
         }
     </style>
 </head>
 
 <body>
-    <div id="messages"></div>
-
-    <div id="sendMsg">
-        <input type="text" id="msgTxt" placeholder="ENTER YOUR MSG...">
-        <input type="submit" id="msgBtn" value="send" onclick="module.sendMsg()">
+    <div class="chat-container">
+        <header class="chat-header">
+            BSIT 1B Group Chat
+        </header>
+        <div id="messages"></div>
+        <div id="sendMsg">
+            <input type="text" id="msgTxt" placeholder="Enter your message...">
+            <input type="submit" id="msgBtn" value="Send" onclick="module.sendMsg()">
+        </div>
     </div>
 
     <script>
@@ -85,7 +133,7 @@
         import { getDatabase, ref, set, remove, onChildAdded, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
-             apiKey: "AIzaSyDxvHNNYAlWPGyEBqFt13o50Kqdz5ApgZI",
+            apiKey: "AIzaSyDxvHNNYAlWPGyEBqFt13o50Kqdz5ApgZI",
             authDomain: "taes-f7423.firebaseapp.com",
              projectId: "taes-f7423",
             storageBucket: "taes-f7423.appspot.com",
@@ -99,44 +147,46 @@
         // variables
         var msgTxt = document.getElementById('msgTxt');
         var sender;
-        if(sessionStorage.getItem('sender')){
+        
+        if (sessionStorage.getItem('sender')) {
             sender = sessionStorage.getItem('sender');
         } else {
             sender = prompt('PLEASE ENTER YOUR NAME');
-            sessionStorage.setItem('sender',sender);
+            sessionStorage.setItem('sender', sender);
         }
 
         // TO SEND MESSAGES
-        module.sendMsg = function sendMsg(){
+        module.sendMsg = function sendMsg() {
             var msg = msgTxt.value;
             var timestamp = new Date().getTime();
-            set(ref(db,"messages/"+timestamp),{
-                msg : msg,
-                sender : sender
+            set(ref(db, "messages/" + timestamp), {
+                msg: msg,
+                sender: sender
             })
 
-            msgTxt.value="";
+            msgTxt.value = "";
         }
 
         // TO RECEIVE MSG
-        onChildAdded(ref(db,"messages"), (data)=>{
-            if(data.val().sender == sender){
-                messages.innerHTML += "<div style=justify-content:end class=outer id="+data.key+"><div id=inner class=me>you : "+data.val().msg+"<button id=dltMsg onclick=module.dltMsg("+data.key+")>DELETE</button></div></div>";
+        onChildAdded(ref(db, "messages"), (data) => {
+            if (data.val().sender == sender) {
+                messages.innerHTML += "<div class='outer sent' id='" + data.key + "'><div class='inner message sent'>You: " + data.val().msg + "<button onclick=module.dltMsg(" + data.key + ")>Delete</button></div></div>";
             } else {
-                messages.innerHTML += "<div class=outer id="+data.key+"><div id=inner class=notMe>"+data.val().sender+" : "+data.val().msg+"</div></div>";
+                messages.innerHTML += "<div class='outer received' id='" + data.key + "'><div class='inner message received'>" + data.val().sender + ": " + data.val().msg + "</div></div>";
             }
-        })
+            messages.scrollTop = messages.scrollHeight;
+        });
 
         // TO DELETE MSG
-        module.dltMsg = function dltMsg(key){
-            remove(ref(db,"messages/"+key));
+        module.dltMsg = function dltMsg(key) {
+            remove(ref(db, "messages/" + key));
         }
 
         // WHEN MSG IS DELETED
-        onChildRemoved(ref(db,"messages"),(data)=>{
+        onChildRemoved(ref(db, "messages"), (data) => {
             var msgBox = document.getElementById(data.key);
             messages.removeChild(msgBox);
-        })
+        });
     </script>
 </body>
 
